@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Интегратор 7/1</title>
+<meta name="description" content="Строительная платформа Интегратор 7/1: проекты, материалы, ремонт и обслуживание.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<script>document.documentElement.className+=' js';</script>
+<style>
+:root{
+  --bg:#EDF5F1;
+  --bg-2:#E2EDE8;
+  --surface:#FFFFFF;
+  --surface-2:#F6FAF8;
+  --line:#DBE9EB;
+  --txt:#071E1A;
+  --body:#35536B;
+  --muted:#718FAD;
+  --emerald:#0F4D3C;
+  --action:#BD4600;
+  --action-strong:#9B4C11;
+  --amber:#E7A22B;
+  --gold:#F5C968;
+  --blue:#175CB5;
+  --red:#D4351C;
+  --shadow:0 3px 12px #082E2424;
+  --shadow-lg:0 18px 44px -22px rgba(7,30,26,.35);
+  --grad:linear-gradient(180deg,#F5C968 0%,#E7A22B 100%);
+  --grad-2:linear-gradient(100deg,#BD4600 0%,#E7A22B 60%,#F5C968 100%);
+  --grad-em:linear-gradient(100deg,#0F4D3C 0%,#175CB5 100%);
+  --r:16px;
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:
+    radial-gradient(900px 520px at 10% -8%,rgba(255,255,255,.95),transparent 60%),
+    radial-gradient(760px 560px at 92% 4%,rgba(231,162,43,.12),transparent 62%),
+    radial-gradient(820px 720px at 50% 104%,rgba(15,77,60,.07),transparent 60%),
+    var(--bg);
+  color:var(--txt);
+  font-family:'Roboto',-apple-system,'Segoe UI',sans-serif;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;line-height:1.6;
+}
+::selection{background:var(--gold);color:#071E1A}
+h1,h2,h3,.disp{font-family:'Roboto',sans-serif;font-weight:700;line-height:1.12;letter-spacing:-.03em}
+a{color:inherit;text-decoration:none}
+button,input{font-family:inherit}
+img,svg{display:block;max-width:100%}
+
+/* ---------- textures ---------- */
+.noise{position:fixed;inset:0;pointer-events:none;z-index:9998;opacity:.035;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");}
+.vignette{position:fixed;inset:0;pointer-events:none;z-index:9997;
+  background:radial-gradient(130% 100% at 50% 0%,transparent 55%,rgba(15,77,60,.08) 100%)}
+
+/* ---------- progress ---------- */
+.progress{position:fixed;top:0;left:0;right:0;height:3px;z-index:1000;background:rgba(15,77,60,.08)}
+.progress i{display:block;height:100%;width:0;background:var(--action)}
+
+/* ---------- preloader ---------- */
+#pre{position:fixed;inset:0;z-index:10000;background:var(--bg);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:26px;transition:opacity .7s var(--ease),visibility .7s}
+#pre.done{opacity:0;visibility:hidden}
+#pre .mark{font-family:'Roboto';font-size:clamp(44px,9vw,84px);font-weight:700;
+  background:var(--grad-2);-webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:-.04em}
+#pre .bar{width:min(280px,60vw);height:3px;background:rgba(15,77,60,.12);overflow:hidden;border-radius:3px}
+#pre .bar i{display:block;height:100%;width:0%;background:var(--grad-2);transition:width .18s linear}
+#pre .pc{font-size:12px;letter-spacing:.4em;color:var(--muted);text-transform:uppercase}
+
+/* ---------- cursor ---------- */
+.cur,.cur-r{position:fixed;top:0;left:0;pointer-events:none;z-index:9999;border-radius:50%;mix-blend-mode:difference}
+.cur{width:7px;height:7px;background:#fff;margin:-3.5px 0 0 -3.5px}
+.cur-r{width:38px;height:38px;border:1px solid rgba(255,255,255,.55);margin:-19px 0 0 -19px;
+  transition:width .3s var(--ease),height .3s var(--ease),margin .3s var(--ease),border-color .3s,opacity .3s}
+.cur-r.big{width:74px;height:74px;margin:-37px 0 0 -37px;border-color:rgba(255,255,255,.9)}
+@media (hover:none){.cur,.cur-r{display:none}}
+
+/* ---------- nav ---------- */
+.nav{position:fixed;top:0;left:0;right:0;z-index:900;padding:20px 0;
+  transition:padding .4s var(--ease),background .4s,backdrop-filter .4s,border-color .4s;
+  border-bottom:1px solid transparent}
+.nav.stuck{padding:11px 0;background:rgba(237,245,241,.85);backdrop-filter:blur(18px) saturate(150%);
+  -webkit-backdrop-filter:blur(18px) saturate(150%);border-bottom-color:var(--line)}
+.nav .in{max-width:1600px;margin:0 auto;padding:0 clamp(18px,4vw,40px);display:flex;align-items:center;gap:26px}
+.logo{display:flex;align-items:center;gap:11px;font-family:'Roboto';font-weight:700;font-size:15px;letter-spacing:-.02em}
+.logo .dot{width:28px;height:28px;border-radius:9px;background:var(--emerald);position:relative;
+  box-shadow:var(--shadow)}
+.logo .dot::after{content:"";position:absolute;inset:7px;border:1.8px solid rgba(255,255,255,.92);border-radius:4px}
+.nav .links{display:flex;gap:2px;margin-left:auto;background:var(--surface);border:1px solid var(--line);
+  border-radius:14px;padding:5px 7px;box-shadow:var(--shadow)}
+.nav .links a{font-size:13.5px;color:var(--body);position:relative;padding:7px 13px;border-radius:9px;
+  transition:background .3s,color .3s;display:inline-flex;align-items:center;gap:6px}
+.nav .links a:hover{color:var(--emerald);background:var(--surface-2)}
+.nav .links a.off{color:var(--muted);cursor:default}
+.nav .links a.off:hover{color:var(--muted);background:transparent}
+.nav .links a.off::after{content:"";width:5px;height:5px;border-right:1.5px solid var(--muted);
+  border-bottom:1.5px solid var(--muted);transform:rotate(-45deg);margin-top:-2px}
+.nav .cta{padding:11px 21px;border-radius:12px;border:1px solid var(--line);font-size:13.5px;font-weight:500;
+  background:var(--surface);color:var(--txt);box-shadow:var(--shadow);transition:.35s var(--ease);white-space:nowrap}
+.nav .cta:hover{background:var(--emerald);color:#fff;border-color:transparent;transform:translateY(-2px)}
+.burger{display:none;width:40px;height:36px;border:1px solid var(--line);border-radius:12px;background:var(--surface);
+  flex-direction:column;justify-content:center;align-items:center;gap:5px;cursor:pointer;margin-left:auto;
+  box-shadow:var(--shadow)}
+.burger i{width:16px;height:1.7px;background:var(--txt);display:block;transition:.3s}
+.mob{position:fixed;inset:0;background:rgba(237,245,241,.97);backdrop-filter:blur(20px);z-index:899;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
+  opacity:0;visibility:hidden;transition:.45s var(--ease)}
+.mob.on{opacity:1;visibility:visible}
+.mob a{font-family:'Roboto';font-weight:700;font-size:26px;color:var(--body)}
+.mob a:hover{color:var(--emerald)}
+.mob a.off{color:var(--muted);opacity:.7}
+@media(max-width:1100px){.nav .links,.nav .cta{display:none}.burger{display:flex}}
+
+/* ---------- layout ---------- */
+.wrap{max-width:1440px;margin:0 auto;padding:0 clamp(18px,4vw,40px)}
+section{position:relative;padding:clamp(80px,11vw,150px) 0}
+.sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:40px;
+  margin-bottom:clamp(38px,5vw,64px);flex-wrap:wrap}
+.sec-num{font-family:'Geist','Roboto',sans-serif;font-size:12px;font-weight:600;letter-spacing:.3em;
+  color:var(--emerald);text-transform:uppercase;display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.sec-num::before{content:"";width:34px;height:2px;background:var(--grad-2);border-radius:2px}
+.sec-head h2{font-size:clamp(30px,4.4vw,54px);max-width:16ch}
+.sec-head .lead{color:var(--body);max-width:44ch;font-size:15.5px}
+
+/* ---------- reveal ---------- */
+.js [data-rv]{opacity:0;transform:translateY(34px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
+.js [data-rv].in{opacity:1;transform:none}
+.js [data-rv="fade"]{transform:none}
+.js [data-rv="left"]{transform:translateX(-40px)}
+.js [data-rv="right"]{transform:translateX(40px)}
+.js [data-rv="scale"]{transform:scale(.94)}
+
+/* ---------- hero ---------- */
+#hero{min-height:100svh;display:flex;align-items:center;padding-top:120px;overflow:hidden}
+#orbs{position:absolute;inset:0;width:100%;height:100%;z-index:0;opacity:.75}
+.hero-grid{position:absolute;inset:0;z-index:0;
+  background-image:linear-gradient(rgba(15,77,60,.05) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(15,77,60,.05) 1px,transparent 1px);
+  background-size:74px 74px;
+  -webkit-mask-image:radial-gradient(75% 60% at 50% 45%,#000 20%,transparent 85%);
+  mask-image:radial-gradient(75% 60% at 50% 45%,#000 20%,transparent 85%)}
+.hero .in{position:relative;z-index:2}
+.chip{display:inline-flex;align-items:center;gap:10px;padding:8px 16px 8px 10px;border:1px solid var(--line);
+  border-radius:100px;background:rgba(255,255,255,.8);backdrop-filter:blur(8px);font-size:12.5px;color:var(--body);
+  letter-spacing:.06em;text-transform:uppercase;box-shadow:var(--shadow);font-weight:500}
+.chip b{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--emerald);
+  box-shadow:0 0 0 0 rgba(15,77,60,.5);animation:pulse 2.4s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 12px rgba(15,77,60,0)}100%{box-shadow:0 0 0 0 rgba(15,77,60,0)}}
+.hero-search{display:flex;align-items:center;gap:8px;max-width:640px;margin-top:22px;padding:6px 6px 6px 20px;
+  background:var(--surface);border:1px solid var(--line);border-radius:100px;box-shadow:var(--shadow);
+  opacity:0;animation:fadeUp .9s var(--ease) .8s forwards}
+.hero-search input{flex:1;min-width:0;border:0;background:transparent;outline:none;font-size:14.5px;color:var(--txt)}
+.hero-search input::placeholder{color:var(--muted)}
+.hero-search .btn{padding:12px 26px}
+#snote{font-size:12.5px;color:var(--muted);margin-top:10px;min-height:18px;opacity:0;
+  animation:fadeUp .9s var(--ease) .85s forwards}
+h1{font-size:clamp(30px,5vw,66px);margin:26px 0 0;font-weight:700}
+h1 .ln{display:block;overflow:hidden;padding-bottom:.04em}
+h1 .ln span{display:block;transform:translateY(108%);animation:riseIn 1.15s var(--ease) .5s forwards}
+@keyframes riseIn{to{transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+h1 em{font-style:normal;background:var(--grad-2);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p.sub{color:var(--body);font-size:clamp(15px,1.35vw,18px);max-width:62ch;margin-top:26px;
+  opacity:0;animation:fadeUp .9s var(--ease) .95s forwards}
+.checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px 28px;max-width:720px;margin-top:26px;
+  list-style:none;opacity:0;animation:fadeUp .9s var(--ease) 1.05s forwards}
+.checks li{display:flex;align-items:center;gap:12px;color:var(--body);font-size:15px}
+.checks .ic{flex:0 0 26px;width:26px;height:26px;border-radius:8px;background:var(--emerald);color:#fff;
+  display:grid;place-items:center;font-size:13px;font-weight:700;box-shadow:0 6px 14px -8px rgba(15,77,60,.7)}
+.btns{display:flex;gap:14px;flex-wrap:wrap;margin-top:34px;opacity:0;
+  animation:fadeUp .9s var(--ease) 1.1s forwards}
+.btn{position:relative;display:inline-flex;align-items:center;gap:11px;padding:16px 30px;border-radius:12px;
+  font-size:14.5px;font-weight:500;letter-spacing:.01em;overflow:hidden;transition:transform .35s var(--ease),color .35s,background .35s,border-color .35s,box-shadow .35s;
+  will-change:transform;border:0;cursor:pointer}
+.btn .t{position:relative;z-index:2}
+.btn.primary{background:var(--grad);color:#071E1A;box-shadow:0 14px 32px -16px rgba(189,70,0,.6)}
+.btn.primary::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,#F7D484,#EDAE3C);
+  opacity:0;transition:opacity .4s}
+.btn.primary:hover::after{opacity:1}
+.btn.ghost{border:1px solid var(--line);background:var(--surface);color:var(--txt);box-shadow:var(--shadow)}
+.btn.ghost:hover{background:var(--emerald);color:#fff;border-color:transparent}
+.btn .arw{transition:transform .4s var(--ease);position:relative;z-index:2}
+.btn:hover .arw{transform:translateX(5px)}
+.hero-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:clamp(46px,6vw,74px);
+  max-width:760px}
+h1 .ln:nth-child(2) span{animation-delay:.6s}
+h1 .ln:nth-child(3) span{animation-delay:.7s}
+.hs{padding:20px 22px;border:1px solid var(--line);border-radius:16px;background:var(--surface);
+  box-shadow:var(--shadow);opacity:0;animation:fadeUp .9s var(--ease) 1.25s forwards}
+.hs:nth-child(2){animation-delay:1.37s}
+.hs:nth-child(3){animation-delay:1.49s}
+.hs .v{font-family:'Roboto';font-weight:700;font-size:clamp(20px,2.4vw,30px);letter-spacing:-.02em;
+  background:var(--grad-2);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hs .l{font-size:11.5px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-top:6px}
+.scroll{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);z-index:3;display:flex;
+  flex-direction:column;align-items:center;gap:9px;font-size:10px;letter-spacing:.3em;color:var(--muted);text-transform:uppercase}
+.scroll i{width:2px;height:52px;background:linear-gradient(to bottom,transparent,var(--emerald));position:relative;overflow:hidden;border-radius:2px}
+.scroll i::after{content:"";position:absolute;top:-52px;left:0;width:2px;height:52px;background:var(--action);animation:sc 2s infinite}
+@keyframes sc{0%{top:-52px}60%,100%{top:52px}}
+@media(max-width:640px){.hero-stats{grid-template-columns:1fr}.scroll{display:none}.checks{grid-template-columns:1fr}}
+
+/* ---------- marquee ---------- */
+.mq{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:20px 0;overflow:hidden;
+  background:var(--surface)}
+.mq .track{display:flex;gap:52px;width:max-content;animation:mq 46s linear infinite}
+.mq:hover .track{animation-play-state:paused}
+@keyframes mq{to{transform:translateX(-50%)}}
+.mq .it{display:flex;align-items:center;gap:52px;font-weight:700;font-size:15px;color:var(--muted);
+  white-space:nowrap;transition:color .3s}
+.mq .it:hover{color:var(--emerald)}
+.mq .it::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--amber)}
+
+/* ---------- cards / features ---------- */
+.card{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);position:relative;
+  overflow:hidden;box-shadow:var(--shadow);
+  transition:border-color .45s,transform .45s var(--ease),background .45s}
+.card::before{content:"";position:absolute;inset:0;
+  background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),rgba(15,77,60,.09),transparent 45%);
+  opacity:0;transition:opacity .5s}
+.card:hover{border-color:rgba(15,77,60,.35);transform:translateY(-6px)}
+.card:hover::before{opacity:1}
+.feats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.feat{padding:30px 28px 26px}
+.feat .fn{position:absolute;top:20px;right:24px;font-family:'Geist','Roboto',sans-serif;font-size:11px;
+  color:#A9BCC9;letter-spacing:.2em;font-weight:600}
+.feat .fi{width:42px;height:42px;border-radius:13px;background:var(--grad-em);display:grid;place-items:center;
+  color:#fff;font-size:17px;font-weight:700;box-shadow:0 10px 22px -12px rgba(15,77,60,.8)}
+.feat h4{font-size:17px;font-weight:700;margin:18px 0 10px;position:relative}
+.feat p{color:var(--body);font-size:14px;line-height:1.5;position:relative}
+@media(max-width:1000px){.feats{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.feats{grid-template-columns:1fr}}
+
+/* ---------- generic panel ---------- */
+.panel{border:1px solid var(--line);border-radius:20px;background:var(--surface);
+  box-shadow:var(--shadow);
+  padding:clamp(22px,3vw,38px);position:relative;overflow:hidden}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:26px}
+.panel-head h3{font-size:clamp(17px,1.7vw,22px);font-weight:700}
+.panel-head .hint{font-size:12.5px;color:var(--muted)}
+.shot{width:100%;border-radius:14px;display:block}
+.img-cap{font-size:12.5px;color:var(--muted);margin-top:12px}
+
+/* ---------- directions ---------- */
+.dirs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.dir{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:22px 22px;
+  border:1px solid var(--line);border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow);
+  position:relative;overflow:hidden;transition:.45s var(--ease)}
+.dir::before{content:"";position:absolute;inset:0;
+  background:radial-gradient(360px circle at var(--mx,50%) var(--my,50%),rgba(15,77,60,.09),transparent 45%);
+  opacity:0;transition:opacity .5s}
+.dir:hover{transform:translateY(-6px);border-color:rgba(15,77,60,.35)}
+.dir:hover::before{opacity:1}
+.dir .dn{position:absolute;top:14px;right:18px;font-family:'Geist','Roboto',sans-serif;font-size:11px;
+  color:#A9BCC9;letter-spacing:.2em;font-weight:600}
+.dir .name{font-weight:700;font-size:15.5px;line-height:1.3;position:relative}
+.dir .go{position:relative;font-size:12px;color:var(--action);margin-top:8px;letter-spacing:.05em;
+  text-transform:uppercase;font-weight:600}
+@media(max-width:1000px){.dirs{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.dirs{grid-template-columns:1fr}}
+
+/* ---------- processes ---------- */
+.procs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.proc{padding:20px 20px 22px}
+.proc .pn{width:42px;height:42px;border-radius:50%;background:rgba(231,162,43,.2);display:grid;place-items:center;
+  font-weight:700;font-size:14.5px;color:var(--txt);position:relative;margin-bottom:14px}
+.proc h3{font-size:16px;font-weight:700;color:var(--emerald);position:relative}
+.proc .thumb{position:relative;aspect-ratio:188/91;overflow:hidden;border-radius:12px;margin:14px 0 12px;
+  background:var(--bg-2)}
+.proc .thumb img{width:100%;height:100%;object-fit:cover;transition:transform .7s var(--ease);position:relative}
+.proc:hover .thumb img{transform:scale(1.07)}
+.proc p.d{color:var(--body);font-size:14px;min-height:44px;position:relative}
+.proc .ready{display:flex;gap:10px;color:var(--emerald);font-size:13.5px;margin-top:14px;position:relative}
+.proc .ready b{font-weight:700}
+.proc .rbar{height:8px;border-radius:8px;background:var(--bg-2);margin-top:10px;overflow:hidden;position:relative}
+.proc .rbar i{display:block;height:100%;width:0;border-radius:8px;background:var(--grad-2);
+  transition:width 1.4s var(--ease)}
+@media(max-width:1100px){.procs{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:620px){.procs{grid-template-columns:1fr}}
+
+/* ---------- content sections ---------- */
+.split{display:grid;grid-template-columns:1.15fr .85fr;gap:26px;align-items:stretch}
+.split .panel{display:flex;flex-direction:column;justify-content:center}
+.split h3{font-size:clamp(19px,2vw,26px);margin-bottom:14px}
+.split p{color:var(--body);font-size:15px}
+.split .btn{margin-top:24px;align-self:flex-start}
+@media(max-width:900px){.split{grid-template-columns:1fr}}
+
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--line);padding:56px 0 40px;background:rgba(255,255,255,.6)}
+.f-cols{display:grid;grid-template-columns:1.5fr repeat(3,1fr);gap:34px}
+.f-brand p{color:var(--body);font-size:13.5px;max-width:40ch;margin-top:14px}
+.f-cols h5{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:700;
+  margin-bottom:14px}
+.f-cols .col a,.f-cols .col .li{display:block;font-size:13.5px;color:var(--body);padding:5px 0;
+  transition:color .3s}
+.f-cols .col a:hover{color:var(--emerald)}
+.f-cols .col .li.off{color:var(--muted);opacity:.75}
+.ph{display:inline-block;font-size:13.5px;color:var(--body);padding:5px 0}
+.ph b{color:var(--action);font-weight:700}
+.soc{display:flex;gap:10px;margin-top:16px}
+.soc a{width:40px;height:40px;border:1px solid var(--line);border-radius:12px;background:var(--surface);
+  display:grid;place-items:center;box-shadow:var(--shadow);transition:.35s var(--ease)}
+.soc a:hover{transform:translateY(-3px);border-color:rgba(15,77,60,.4)}
+.soc img{width:18px;height:18px}
+.f-contact .btn{margin-top:16px}
+.f-links{display:flex;gap:26px;flex-wrap:wrap;font-size:13.5px;color:var(--body)}
+.f-links a{transition:color .3s}
+.f-links a:hover{color:var(--emerald)}
+.f-bot{margin-top:40px;padding-top:22px;border-top:1px solid var(--line);display:flex;justify-content:space-between;
+  gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+@media(max-width:1000px){.f-cols{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.f-cols{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001s!important;animation-delay:0s!important;transition-duration:.001s!important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<div class="noise"></div>
+<div class="vignette"></div>
+<div class="progress"><i id="pbar"></i></div>
+
+<div id="pre">
+  <div class="mark">7/1</div>
+  <div class="bar"><i id="preBar"></i></div>
+  <div class="pc"><span id="preNum">0</span>% — Интегратор 7/1</div>
+</div>
+
+<div class="cur"></div>
+<div class="cur-r"></div>
+
+<header class="nav" id="nav">
+  <div class="in">
+    <a href="#hero" class="logo"><span class="dot"></span> Интегратор 7/1</a>
+    <nav class="links">
+      <a href="#about">О проекте</a>
+      <a href="#" class="off" aria-disabled="true">Библиотека 7/1</a>
+      <a href="#" class="off" aria-disabled="true">CTA</a>
+      <a href="#" class="off" aria-disabled="true">AI Агент</a>
+      <a href="#" class="off" aria-disabled="true">3C</a>
+      <a href="#" class="off" aria-disabled="true">Участники</a>
+    </nav>
+    <a href="https://интегратор7-1.рф/auth/login" class="cta">Личный кабинет</a>
+    <div class="burger" id="burger"><i></i><i></i><i></i></div>
+  </div>
+</header>
+
+<div class="mob" id="mob">
+  <a href="#about">О проекте</a>
+  <a href="#directions">Направления</a>
+  <a href="#processes">Процессы</a>
+  <a href="#catalog">Каталог</a>
+  <a href="#manufacturers">Производители</a>
+  <a href="https://интегратор7-1.рф/auth/login">Личный кабинет</a>
+</div>
+
+<main>
+
+<!-- HERO -->
+<section id="hero" class="hero">
+  <canvas id="orbs"></canvas>
+  <div class="hero-grid"></div>
+  <div class="wrap in">
+    <div class="chip"><b></b> Самый большой строительный каталог</div>
+    <form class="hero-search" id="sform" role="search" aria-label="Поиск по каталогу">
+      <input type="text" id="sq" placeholder="Поиск по каталогу" autocomplete="off">
+      <button type="submit" class="btn primary magnetic"><span class="t">Найти</span><span class="arw">→</span></button>
+    </form>
+    <div id="snote"></div>
+    <h1>
+      <span class="ln"><span>Современная цифровая</span></span>
+      <span class="ln"><span>платформа строительства</span></span>
+      <span class="ln"><span><em>и ремонта</em></span></span>
+    </h1>
+    <p class="sub">Все специалисты — в одном месте.</p>
+    <ul class="checks">
+      <li><span class="ic">✓</span> Прозрачные процессы</li>
+      <li><span class="ic">✓</span> Проверенные исполнители</li>
+      <li><span class="ic">✓</span> Цифровой контроль на всех этапах</li>
+      <li><span class="ic">✓</span> Документы и история объекта</li>
+      <li><span class="ic">✓</span> Гарантии и сопровождение</li>
+    </ul>
+    <div class="btns">
+      <a href="https://интегратор7-1.рф/auth/register" class="btn primary magnetic"><span class="t">Зарегистрироваться</span><span class="arw">→</span></a>
+      <a href="#catalog" class="btn ghost magnetic"><span class="t">Перейти в каталог</span><span class="arw">→</span></a>
+    </div>
+    <div class="hero-stats">
+      <div class="hs"><div class="v" data-cnt="7" data-kind="int">0</div><div class="l">направлений каталога</div></div>
+      <div class="hs"><div class="v" data-cnt="7" data-kind="int">0</div><div class="l">процессов на объекте</div></div>
+      <div class="hs"><div class="v" data-cnt="5" data-kind="int">0</div><div class="l">преимуществ платформы</div></div>
+    </div>
+  </div>
+  <div class="scroll">Scroll <i></i></div>
+</section>
+
+<!-- MARQUEE -->
+<div class="mq"><div class="track" id="mqTrack"></div></div>
+
+<!-- 01 ABOUT -->
+<section id="about">
+  <div class="wrap">
+    <div class="sec-head">
+      <div data-rv="left">
+        <div class="sec-num">01 / О проекте</div>
+        <h2>Строительство, ремонт и обслуживание под контролем</h2>
+      </div>
+      <p class="lead" data-rv="right">Интегратор 7/1 — строительная платформа: проекты, материалы, ремонт
+        и обслуживание. Заказ привязывается к объекту и делится на подзаказы по поставщикам.</p>
+    </div>
+
+    <div class="feats">
+      <div class="card feat" data-rv><span class="fn">01</span>
+        <div class="fi">◧</div>
+        <h4>Объект</h4>
+        <p>Документы и история объекта: вся информация по объекту собрана в одном цифровом паспорте.</p></div>
+      <div class="card feat" data-rv><span class="fn">02</span>
+        <div class="fi">↻</div>
+        <h4>Как это работает</h4>
+        <p>7 процессов — один объект: от материалов и проекта до контроля качества и паспорта.</p></div>
+      <div class="card feat" data-rv><span class="fn">03</span>
+        <div class="fi">▦</div>
+        <h4>Каталог</h4>
+        <p>Материалы, работы и услуги от поставщиков платформы — самый большой строительный каталог.</p></div>
+      <div class="card feat" data-rv><span class="fn">04</span>
+        <div class="fi">⌂</div>
+        <h4>Производители</h4>
+        <p>Заводы и бренды, чьи товары есть в каталоге: товары и контакты производителей.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 DIRECTIONS -->
+<section id="directions">
+  <div class="wrap">
+    <div class="sec-head">
+      <div data-rv="left">
+        <div class="sec-num">02 / Направления</div>
+        <h2>7 направлений</h2>
+      </div>
+      <p class="lead" data-rv="right">Направления строительного каталога — от проекта и дизайна
+        до инженерных систем и благоустройства.</p>
+    </div>
+
+    <div class="panel" data-rv="scale" style="margin-bottom:16px">
+      <div class="panel-head">
+        <div><h3>Дом в разрезе</h3>
+          <div class="hint">Жилые комнаты, ремонт, инженерные системы и сад</div></div>
+        <div class="hint">7 направлений</div>
+      </div>
+      <img class="shot" src="https://интегратор7-1.рф/images/home/house.png"
+        alt="Дом в разрезе: жилые комнаты, ремонт, инженерные системы и сад" loading="lazy">
+    </div>
+
+    <div class="dirs" id="dirGrid">
+      <a class="dir" href="https://интегратор7-1.рф/catalog" data-rv><span class="dn">01</span>
+        <div><div class="name">Проекты и дизайн</div><div class="go">В каталог →</div></div></a>
+      <a class="dir" href="https://интегратор7-1.рф/catalog" data-rv><span class="dn">02</span>
+        <div><div class="name">Строительство</div><div class="go">В каталог →</div></div></a>
+      <a class="dir" href="https://интегратор7-1.рф/catalog" data-rv><span class="dn">03</span>
+        <div><div class="name">Обслуживание и сервис</div><div class="go">В каталог →</div></div></a>
+      <a class="dir" href="https://интегратор7-1.рф/catalog" data-rv><span class="dn">04</span>
+        <div><div class="name">Капитальный ремонт</div><div class="go">В каталог →</div></div></a>
+      <a class="dir" href="https://интегратор7-1.рф/catalog" data-rv><span class="dn">05</span>
+        <div><div class="name">Мебель и декор</div><div class="go">В каталог →</div></div></a>
+      <a class="dir" href="https://интегратор7-1.рф/catalog" data-rv><span class="dn">06</span>
+        <div><div class="name">Инженерные системы</div><div class="go">В каталог →</div></div></a>
+      <a class="dir" href="https://интегратор7-1.рф/catalog" data-rv><span class="dn">07</span>
+        <div><div class="name">Благоустройство</div><div class="go">В каталог →</div></div></a>
+    </div>
+  </div>
+</section>
+
+<!-- 03 HOUSING -->
+<section id="housing">
+  <div class="wrap">
+    <div class="sec-head">
+      <div data-rv="left">
+        <div class="sec-num">03 / Жилое строительство</div>
+        <h2>Для всех видов жилого строительства</h2>
+      </div>
+    </div>
+    <div class="panel" data-rv="scale">
+      <img class="shot" src="https://интегратор7-1.рф/images/home/residential.png"
+        alt="Жилой дом с террасой и садом" loading="lazy">
+      <div class="img-cap">Жилой дом с террасой и садом</div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 PROCESSES -->
+<section id="processes">
+  <div class="wrap">
+    <div class="sec-head">
+      <div data-rv="left">
+        <div class="sec-num">04 / Процессы</div>
+        <h2>7 процессов — один объект</h2>
+      </div>
+      <p class="lead" data-rv="right">Готовность появится после выбора объекта. Каждый этап фиксируется
+        и отражается в паспорте объекта.</p>
+    </div>
+
+    <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:26px" data-rv="fade">
+      <a href="https://интегратор7-1.рф/auth/register" class="btn primary magnetic">
+        <span class="t">Создать объект</span><span class="arw">→</span></a>
+      <span style="font-size:13px;color:var(--muted)">Готовность появится после выбора объекта.</span>
+    </div>
+
+    <div class="procs" id="procGrid">
+      <div class="card proc" data-rv>
+        <div class="pn">01</div>
+        <h3>Материалы</h3>
+        <div class="thumb"><img src="https://интегратор7-1.рф/images/home/process-01.jpg"
+          alt="Образцы строительных и отделочных материалов" loading="lazy"></div>
+        <p class="d">Выбор и честный подбор с контролем поставок</p>
+        <div class="ready">Готовность<b>—</b></div>
+        <div class="rbar"><i data-w="0"></i></div>
+      </div>
+      <div class="card proc" data-rv>
+        <div class="pn">02</div>
+        <h3>Проект</h3>
+        <div class="thumb"><img src="https://интегратор7-1.рф/images/home/process-02.jpg"
+          alt="Макет дома на архитектурных чертежах" loading="lazy"></div>
+        <p class="d">Разработка всех разделов вашего объекта</p>
+        <div class="ready">Готовность<b>—</b></div>
+        <div class="rbar"><i data-w="0"></i></div>
+      </div>
+      <div class="card proc" data-rv>
+        <div class="pn">03</div>
+        <h3>Исполнители</h3>
+        <div class="thumb"><img src="https://интегратор7-1.рф/images/home/process-03.jpg"
+          alt="Специалист на строительном объекте" loading="lazy"></div>
+        <p class="d">Подбор исполнителей на любой этап работ</p>
+        <div class="ready">Готовность<b>—</b></div>
+        <div class="rbar"><i data-w="0"></i></div>
+      </div>
+      <div class="card proc" data-rv>
+        <div class="pn">04</div>
+        <h3>Ремонт</h3>
+        <div class="thumb"><img src="https://интегратор7-1.рф/images/home/process-04.jpg"
+          alt="Комната в процессе ремонта" loading="lazy"></div>
+        <p class="d">Выполнение работ в срок</p>
+        <div class="ready">Готовность<b>—</b></div>
+        <div class="rbar"><i data-w="0"></i></div>
+      </div>
+      <div class="card proc" data-rv>
+        <div class="pn">05</div>
+        <h3>Контроль качества</h3>
+        <div class="thumb"><img src="https://интегратор7-1.рф/images/home/process-05.jpg"
+          alt="Специалист проверяет качество работ с планшетом" loading="lazy"></div>
+        <p class="d">Контроль всех процессов от формирования до сдачи</p>
+        <div class="ready">Готовность<b>—</b></div>
+        <div class="rbar"><i data-w="0"></i></div>
+      </div>
+      <div class="card proc" data-rv>
+        <div class="pn">06</div>
+        <h3>Гарантия и обслуживание</h3>
+        <div class="thumb"><img src="https://интегратор7-1.рф/images/home/process-06.jpg"
+          alt="Оборудование инженерных систем дома" loading="lazy"></div>
+        <p class="d">План-график работ постгарантийного обслуживания</p>
+        <div class="ready">Готовность<b>—</b></div>
+        <div class="rbar"><i data-w="0"></i></div>
+      </div>
+      <div class="card proc" data-rv>
+        <div class="pn">07</div>
+        <h3>Паспорт объекта</h3>
+        <div class="thumb"><img src="https://интегратор7-1.рф/images/home/process-07.jpg"
+          alt="Цифровой паспорт дома на экране ноутбука" loading="lazy"></div>
+        <p class="d">Вся информация по объекту</p>
+        <div class="ready">Готовность<b>—</b></div>
+        <div class="rbar"><i data-w="0"></i></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 CATALOG -->
+<section id="catalog">
+  <div class="wrap">
+    <div class="sec-head">
+      <div data-rv="left">
+        <div class="sec-num">05 / Каталог</div>
+        <h2>Каталог</h2>
+      </div>
+      <p class="lead" data-rv="right">Материалы, работы и услуги от поставщиков платформы. Заказ привязывается
+        к объекту и делится на подзаказы по поставщикам.</p>
+    </div>
+    <div class="split">
+      <div class="panel" data-rv="left">
+        <h3>Самый большой строительный каталог</h3>
+        <p>Загружаем каталог — материалы, работы и услуги от поставщиков платформы. Заказ привязывается
+          к объекту и делится на подзаказы по поставщикам.</p>
+        <a href="https://интегратор7-1.рф/catalog" class="btn primary magnetic">
+          <span class="t">Перейти в каталог</span><span class="arw">→</span></a>
+      </div>
+      <div class="panel" data-rv="right">
+        <h3>Заказ на объекте</h3>
+        <p>Каждый заказ привязывается к объекту: документы, история и паспорт объекта хранятся в одном месте,
+          а подзаказы распределяются по поставщикам.</p>
+        <a href="https://интегратор7-1.рф/auth/register" class="btn ghost magnetic">
+          <span class="t">Зарегистрироваться</span><span class="arw">→</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 06 MANUFACTURERS -->
+<section id="manufacturers">
+  <div class="wrap">
+    <div class="sec-head">
+      <div data-rv="left">
+        <div class="sec-num">06 / Производители</div>
+        <h2>Производители</h2>
+      </div>
+      <p class="lead" data-rv="right">Заводы и бренды, чьи товары есть в каталоге. Откройте производителя,
+        чтобы посмотреть его товары и контакты.</p>
+    </div>
+    <div class="panel" data-rv="scale">
+      <div class="panel-head">
+        <div><h3>Загружаем производителей</h3>
+          <div class="hint">Заводы и бренды, чьи товары есть в каталоге</div></div>
+        <a href="https://интегратор7-1.рф/manufacturers" class="btn ghost magnetic">
+          <span class="t">Смотреть производителей</span><span class="arw">→</span></a>
+      </div>
+      <div class="feats">
+        <div class="card feat"><span class="fn">01</span><div class="fi">🏭</div>
+          <h4>Заводы</h4><p>Заводы, чьи товары есть в каталоге платформы.</p></div>
+        <div class="card feat"><span class="fn">02</span><div class="fi">◇</div>
+          <h4>Бренды</h4><p>Бренды, представленные в каталоге материалов и услуг.</p></div>
+        <div class="card feat"><span class="fn">03</span><div class="fi">☰</div>
+          <h4>Товары</h4><p>Откройте производителя, чтобы посмотреть его товары.</p></div>
+        <div class="card feat"><span class="fn">04</span><div class="fi">☎</div>
+          <h4>Контакты</h4><p>Контакты производителя доступны на его странице.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="f-cols">
+      <div class="f-brand">
+        <a href="#hero" class="logo"><span class="dot"></span> Интегратор 7/1</a>
+        <p>Строительство, ремонт и обслуживание под контролем. Все специалисты — в одном месте.</p>
+        <div class="soc">
+          <a href="https://интегратор7-1.рф/" aria-label="YouTube"><img src="https://интегратор7-1.рф/brand/youtube.svg" alt="YouTube"></a>
+          <a href="https://интегратор7-1.рф/" aria-label="Telegram"><img src="https://интегратор7-1.рф/brand/telegram.svg" alt="Telegram"></a>
+          <a href="https://интегратор7-1.рф/" aria-label="ВКонтакте"><img src="https://интегратор7-1.рф/brand/vk.svg" alt="ВКонтакте"></a>
+          <a href="https://интегратор7-1.рф/" aria-label="Одноклассники"><img src="https://интегратор7-1.рф/brand/ok.svg" alt="Одноклассники"></a>
+        </div>
+      </div>
+      <div class="col">
+        <h5>Платформа</h5>
+        <span class="li off">Объект</span>
+        <span class="li off">Как это работает</span>
+        <a href="#catalog">Каталог</a>
+        <a href="#manufacturers">Производители</a>
+        <span class="li off">Дорожная карта</span>
+      </div>
+      <div class="col">
+        <h5>Участникам</h5>
+        <span class="li off">Мастерам</span>
+        <span class="li off">Поставщикам</span>
+        <span class="li off">Тарифы</span>
+        <a href="https://интегратор7-1.рф/privacy">Политика конфиденциальности</a>
+        <span class="li off">Соглашение</span>
+      </div>
+      <div class="col f-contact">
+        <h5>Помощь и контакты</h5>
+        <span class="li off">Вопросы и ответы</span>
+        <span class="li off">Поддержка</span>
+        <span class="li off">Документы</span>
+        <span class="ph">Контакты: <b>[ТЕЛЕФОН]</b> · <b>[ПОЧТА]</b></span>
+        <button class="btn ghost magnetic" type="button"><span class="t">Связаться с нами</span><span class="arw">→</span></button>
+      </div>
+    </div>
+    <div class="f-bot">
+      <span>© 2026 Интегратор 7/1</span>
+      <span>[ЮРИДИЧЕСКОЕ ЛИЦО И ИНН]</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ============ HELPERS ============ */
+const $=(s,c)=>(c||document).querySelector(s), $$=(s,c)=>[...(c||document).querySelectorAll(s)];
+const nf=n=>Number(n).toLocaleString('ru-RU');
+function fmt(n,kind){
+  if(kind==='pct') return n.toFixed(1).replace('.',',')+'<small>%</small>';
+  return nf(Math.round(n));
+}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ============ PRELOADER ============ */
+(function(){
+  let p=0, el=$('#preBar'), num=$('#preNum'), pre=$('#pre');
+  const t=setInterval(()=>{
+    p=Math.min(100,p+Math.random()*16+7);
+    el.style.width=p+'%'; num.textContent=Math.round(p);
+    if(p>=100){clearInterval(t);setTimeout(()=>{pre.classList.add('done');document.body.classList.add('loaded');},420);}
+  },110);
+  setTimeout(()=>{clearInterval(t);pre.classList.add('done');document.body.classList.add('loaded');},4200);
+})();
+
+/* ============ CURSOR ============ */
+(function(){
+  if(matchMedia('(hover:none)').matches) return;
+  const a=$('.cur'),b=$('.cur-r');let x=0,y=0,tx=0,ty=0;
+  addEventListener('mousemove',e=>{tx=e.clientX;ty=e.clientY;a.style.transform=`translate(${tx}px,${ty}px)`;});
+  (function loop(){x+=(tx-x)*.16;y+=(ty-y)*.16;b.style.transform=`translate(${x}px,${y}px)`;requestAnimationFrame(loop);})();
+  document.addEventListener('mouseover',e=>{
+    const t=e.target.closest('a,button,.card,.dir,th');
+    b.classList.toggle('big',!!t);
+  });
+})();
+
+/* ============ NAV ============ */
+const nav=$('#nav'), pbar=$('#pbar');
+addEventListener('scroll',()=>{
+  const y=scrollY; nav.classList.toggle('stuck',y>40);
+  const h=document.documentElement.scrollHeight-innerHeight;
+  pbar.style.width=(h>0?(y/h)*100:0)+'%';
+},{passive:true});
+$('#burger').onclick=()=>$('#mob').classList.toggle('on');
+$$('#mob a').forEach(a=>a.onclick=()=>$('#mob').classList.remove('on'));
+$$('a.off').forEach(a=>a.addEventListener('click',e=>e.preventDefault()));
+
+/* ============ REVEAL ============ */
+const io=new IntersectionObserver((es)=>{
+  es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); onReveal(e.target); io.unobserve(e.target);} });
+},{threshold:.14,rootMargin:'0px 0px -8% 0px'});
+$$('[data-rv]').forEach((el,i)=>{el.style.transitionDelay=(i%4)*.07+'s';io.observe(el);});
+
+function onReveal(el){
+  $$('[data-cnt]',el).forEach(runCount);
+  if(el.matches('[data-cnt]')) runCount(el);
+  $$('.rbar i',el).forEach(b=>b.style.width=(b.dataset.w||0)+'%');
+}
+const ioCnt=new IntersectionObserver(es=>es.forEach(e=>{
+  if(e.isIntersecting){runCount(e.target);ioCnt.unobserve(e.target);}
+}),{threshold:.4});
+
+function runCount(el){
+  if(el.dataset.done)return; el.dataset.done=1;
+  const to=parseFloat(el.dataset.cnt), kind=el.dataset.kind, dur=1700, st=performance.now();
+  (function tick(t){
+    const k=Math.min(1,(t-st)/dur), e=1-Math.pow(1-k,4);
+    el.innerHTML=fmt(to*e,kind);
+    if(k<1) requestAnimationFrame(tick);
+  })(st);
+}
+
+/* ============ MAGNETIC + CARD GLOW ============ */
+$$('.magnetic').forEach(b=>{
+  b.addEventListener('mousemove',e=>{
+    const r=b.getBoundingClientRect();
+    b.style.transform=`translate(${(e.clientX-r.left-r.width/2)*.24}px,${(e.clientY-r.top-r.height/2)*.35}px)`;
+  });
+  b.addEventListener('mouseleave',()=>b.style.transform='');
+});
+document.addEventListener('mousemove',e=>{
+  const c=e.target.closest?.('.card,.dir');
+  if(c){const r=c.getBoundingClientRect();c.style.setProperty('--mx',(e.clientX-r.left)+'px');c.style.setProperty('--my',(e.clientY-r.top)+'px');}
+});
+
+/* ============ HERO ORBS ============ */
+(function(){
+  const cv=$('#orbs'), ctx=cv.getContext('2d'); let W,H,parts=[];
+  const cols=[[189,70,0],[231,162,43],[23,92,181],[15,77,60]];
+  function rs(){W=cv.width=cv.offsetWidth*devicePixelRatio;H=cv.height=cv.offsetHeight*devicePixelRatio;
+    cv.style.width=cv.offsetWidth+'px';cv.style.height=cv.offsetHeight+'px';}
+  rs(); addEventListener('resize',rs);
+  const orbs=cols.map((c,i)=>({c,x:Math.random(),y:Math.random(),r:.28+Math.random()*.2,
+    sx:(Math.random()-.5)*.00016,sy:(Math.random()-.5)*.00016,ph:Math.random()*6.3}));
+  for(let i=0;i<70;i++)parts.push({x:Math.random(),y:Math.random(),r:Math.random()*1.6+.4,
+    vx:(Math.random()-.5)*.00022,vy:(Math.random()-.5)*.00022,a:Math.random()*.5+.15});
+  function frame(t){
+    ctx.clearRect(0,0,W,H); ctx.globalCompositeOperation='lighter';
+    orbs.forEach(o=>{
+      o.x+=o.sx;o.y+=o.sy;
+      if(o.x<-.2||o.x>1.2)o.sx*=-1; if(o.y<-.2||o.y>1.2)o.sy*=-1;
+      const px=(o.x+Math.sin(t/2600+o.ph)*.04)*W;
+      const py2=(o.y+Math.sin(t/3400+o.ph)*.05)*H, rr=o.r*Math.min(W,H);
+      const g=ctx.createRadialGradient(px,py2,0,px,py2,rr);
+      g.addColorStop(0,`rgba(${o.c[0]},${o.c[1]},${o.c[2]},.30)`);
+      g.addColorStop(.5,`rgba(${o.c[0]},${o.c[1]},${o.c[2]},.07)`);
+      g.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(px,py2,rr,0,6.2832); ctx.fill();
+    });
+    parts.forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0)p.x=1; if(p.x>1)p.x=0; if(p.y<0)p.y=1; if(p.y>1)p.y=0;
+      ctx.fillStyle=`rgba(7,30,26,${p.a*.28})`;
+      ctx.beginPath(); ctx.arc(p.x*W,p.y*H,p.r*devicePixelRatio,0,6.2832); ctx.fill();
+    });
+    ctx.globalCompositeOperation='source-over';
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
+/* ============ MARQUEE ============ */
+(function(){
+  const dirs=['Проекты и дизайн','Строительство','Обслуживание и сервис','Капитальный ремонт',
+    'Мебель и декор','Инженерные системы','Благоустройство'];
+  const html=dirs.map(n=>`<span class="it">${esc(n)}</span>`).join('');
+  $('#mqTrack').innerHTML=html+html;
+})();
+
+/* ============ SEARCH ============ */
+(function(){
+  const form=$('#sform'), input=$('#sq'), note=$('#snote');
+  const items=$$('.dir,.proc');
+  function apply(){
+    const q=input.value.trim().toLowerCase();
+    let shown=0;
+    items.forEach(el=>{
+      const ok=!q||el.textContent.toLowerCase().includes(q);
+      el.style.display=ok?'':'none'; if(ok)shown++;
+    });
+    note.textContent=!q?'':(shown?`Найдено: ${shown}. Остальное — в каталоге.`:'Ничего не найдено — загляните в каталог.');
+  }
+  form.addEventListener('submit',e=>{
+    e.preventDefault(); apply();
+    document.querySelector('#directions').scrollIntoView({behavior:'smooth',block:'start'});
+  });
+  input.addEventListener('input',apply);
+})();
+
+/* ============ INIT ON SCROLL ============ */
+$$('[data-cnt]').forEach(el=>ioCnt.observe(el));
+</script>
+</body>
+</html>
